@@ -3,23 +3,21 @@ RegisterCommand("jailmenu", function(source, args)
 	if PlayerData.job.name == "police" then
 		OpenJailMenu()
 	else
-		ESX.ShowNotification("You are not an officer!")
+	    ESX.ShowNotification(_U('not_officer'))
 	end
 end)
 
 function LoadAnim(animDict)
 	RequestAnimDict(animDict)
-
 	while not HasAnimDictLoaded(animDict) do
-		Citizen.Wait(10)
+		Wait(10)
 	end
 end
 
 function LoadModel(model)
 	RequestModel(model)
-
 	while not HasModelLoaded(model) do
-		Citizen.Wait(10)
+		Wait(10)
 	end
 end
 
@@ -45,7 +43,7 @@ end
 function Cutscene()
 	DoScreenFadeOut(100)
 
-	Citizen.Wait(250)
+	Wait(250)
 
 	local Male = GetHashKey("mp_m_freemode_01")
 
@@ -85,13 +83,9 @@ function Cutscene()
 	FreezeEntityPosition(PlayerPed, true)
 
 	Cam()
-
-	Citizen.Wait(1000)
-
+	Wait(1000)
 	DoScreenFadeIn(100)
-
-	Citizen.Wait(10000)
-
+	Wait(10000)
 	DoScreenFadeOut(250)
 
 	local JailPosition = Config.JailPositions["Cell"]
@@ -99,12 +93,9 @@ function Cutscene()
 	DeleteEntity(Police)
 	SetModelAsNoLongerNeeded(-1320879687)
 
-	Citizen.Wait(1000)
-
+	Wait(1000)
 	DoScreenFadeIn(250)
-
 	TriggerServerEvent("InteractSound_SV:PlayOnSource", "cell", 0.3)
-
 	RenderScriptCams(false,  false,  0,  true,  true)
 	FreezeEntityPosition(PlayerPed, false)
 	DestroyCam(Config.Cutscene["CameraPos"]["cameraId"])
@@ -150,52 +141,38 @@ function TeleportPlayer(pos)
 			if action == "Boiling Broke" or action == "Security" then
 
 				if PlayerData.job.name ~= "police" then
-					ESX.ShowNotification("You don't have an key to go here!")
+					ESX.ShowNotification(_U('not_keys'))
 					return
 				end
 			end
-
 			menu.close()
-
 			DoScreenFadeOut(100)
-
-			Citizen.Wait(250)
-
+			Wait(250)
 			SetEntityCoords(PlayerPedId(), position["x"], position["y"], position["z"])
-
-			Citizen.Wait(250)
-
+			Wait(250)
 			DoScreenFadeIn(100)
 			
 		end,
-
 		function(data, menu)
 			menu.close()
 		end)
 	else
 		local position = Config.Teleports[Values["goal"][1]]
-
 		DoScreenFadeOut(100)
-
-		Citizen.Wait(250)
-
+		Wait(250)
 		SetEntityCoords(PlayerPedId(), position["x"], position["y"], position["z"])
-
-		Citizen.Wait(250)
-
+		Wait(250)
 		DoScreenFadeIn(100)
 	end
 end
 
-Citizen.CreateThread(function()
+CreateThread(function()
 	local blip = AddBlipForCoord(Config.Teleports["Boiling Broke"]["x"], Config.Teleports["Boiling Broke"]["y"], Config.Teleports["Boiling Broke"]["z"])
-
     SetBlipSprite (blip, 188)
     SetBlipDisplay(blip, 4)
     SetBlipScale  (blip, 0.8)
     SetBlipColour (blip, 49)
     SetBlipAsShortRange(blip, true)
-
     BeginTextCommandSetBlipName("STRING")
     AddTextComponentString('Boilingbroke Penitentiary')
     EndTextCommandSetBlipName(blip)

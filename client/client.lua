@@ -16,14 +16,10 @@ PlayerData = {}
 
 local jailTime = 0
 
-Citizen.CreateThread(function()
-	while ESX == nil do
-		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(0)
-	end
-
+CreateThread(function()
+	ESX = exports["es_extended"]:getSharedObject()
 	while ESX.GetPlayerData() == nil do
-		Citizen.Wait(10)
+		Wait(10)
 	end
 
 	PlayerData = ESX.GetPlayerData()
@@ -34,8 +30,7 @@ end)
 RegisterNetEvent("esx:playerLoaded")
 AddEventHandler("esx:playerLoaded", function(newData)
 	PlayerData = newData
-
-	Citizen.Wait(25000)
+	Wait(25000)
 
 	ESX.TriggerServerCallback("esx-qalle-jail:retrieveJailTime", function(inJail, newJailTime)
 		if inJail then
@@ -74,9 +69,7 @@ end)
 function JailLogin()
 	local JailPosition = Config.JailPositions["Cell"]
 	SetEntityCoords(PlayerPedId(), JailPosition["x"], JailPosition["y"], JailPosition["z"] - 1)
-
-	ESX.ShowNotification("Last time you went to sleep you were jailed, because of that you are now put back!")
-
+    ESX.ShowNotification(_U('back_in_jail'))
 	InJail()
 end
 
@@ -88,31 +81,25 @@ function UnJail()
 	ESX.TriggerServerCallback('esx_skin:getPlayerSkin', function(skin)
 		TriggerEvent('skinchanger:loadSkin', skin)
 	end)
-
-	ESX.ShowNotification("You are released, stay calm outside! Good LucK!")
+    ESX.ShowNotification(_U('you_released'))
 end
 
 function InJail()
 
 	--Jail Timer--
 
-	Citizen.CreateThread(function()
-
+	CreateThread(function()
 		while jailTime > 0 do
-
 			jailTime = jailTime - 1
-
-			ESX.ShowNotification("You have " .. jailTime .. " minutes left in jail!")
+            ESX.ShowNotification(_U('few_minutes'))
 
 			TriggerServerEvent("esx-qalle-jail:updateJailTime", jailTime)
-
 			if jailTime == 0 then
 				UnJail()
-
 				TriggerServerEvent("esx-qalle-jail:updateJailTime", 0)
 			end
 
-			Citizen.Wait(60000)
+			Wait(60000)
 		end
 
 	end)
@@ -121,13 +108,11 @@ function InJail()
 
 	--Prison Work--
 
-	Citizen.CreateThread(function()
+	CreateThread(function()
 		while jailTime > 0 do
 			
 			local sleepThread = 500
-
 			local Packages = Config.PrisonWork["Packages"]
-
 			local Ped = PlayerPedId()
 			local PedCoords = GetEntityCoords(Ped)
 
@@ -154,32 +139,23 @@ function InJail()
 							if v["state"] then
 								PackPackage(posId)
 							else
-								ESX.ShowNotification("You've already taken this package!")
+							    ESX.ShowNotification(_U('package_taken'))
 							end
-
 						end
-
 					end
-
 				end
-
 			end
-
-			Citizen.Wait(sleepThread)
-
+			Wait(sleepThread)
 		end
 	end)
-
 	--Prison Work--
-
 end
 
 function LoadTeleporters()
-	Citizen.CreateThread(function()
+	CreateThread(function()
 		while true do
 			
 			local sleepThread = 500
-
 			local Ped = PlayerPedId()
 			local PedCoords = GetEntityCoords(Ped)
 
@@ -201,7 +177,7 @@ function LoadTeleporters()
 				end
 			end
 
-			Citizen.Wait(sleepThread)
+			Wait(sleepThread)
 
 		end
 	end)
@@ -223,25 +199,20 @@ function PackPackage(packageId)
 
 	while Packaging do
 		
-		Citizen.Wait(1)
+		Wait(1)
 
 		local TimeToTake = 60000 * 1.20 -- Minutes
 		local PackPercent = (GetGameTimer() - StartTime) / TimeToTake * 100
 
 		if not IsPedUsingScenario(PlayerPedId(), "PROP_HUMAN_BUM_BIN") then
 			DeleteEntity(PackageObject)
-
-			ESX.ShowNotification("Canceled!")
-
+		    ESX.ShowNotification(_U('canceled'))
 			Packaging = false
 		end
 
 		if PackPercent >= 100 then
-
 			Packaging = false
-
 			DeliverPackage(PackageObject)
-
 			Package["state"] = false
 		else
 			ESX.Game.Utils.DrawText3D(Package, "Packaging... " .. math.ceil(tonumber(PackPercent)) .. "%", 0.4)
@@ -264,8 +235,7 @@ function DeliverPackage(packageId)
 	LoadAnim("anim@heists@box_carry@")
 
 	while Packaging do
-
-		Citizen.Wait(5)
+		Wait(5)
 
 		if not IsEntityPlayingAnim(PlayerPedId(), "anim@heists@box_carry@", "idle", 3) then
 			TaskPlayAnim(PlayerPedId(), "anim@heists@box_carry@", "idle", 8.0, 8.0, -1, 50, 0, false, false, false)
@@ -325,14 +295,14 @@ function OpenJailMenu()
             	local jailTime = tonumber(data2.value)
 
             	if jailTime == nil then
-              		ESX.ShowNotification("The time needs to be in minutes!")
+				    ESX.ShowNotification(_U('time_minutes'))
             	else
               		menu2.close()
 
               		local closestPlayer, closestDistance = ESX.Game.GetClosestPlayer()
 
               		if closestPlayer == -1 or closestDistance > 3.0 then
-                		ESX.ShowNotification("No players nearby!")
+                        ESX.ShowNotification(_U('players_nearby'))
 					else
 						ESX.UI.Menu.Open(
 							'dialog', GetCurrentResourceName(), 'jail_choose_reason_menu',
@@ -344,14 +314,14 @@ function OpenJailMenu()
 						  	local reason = data3.value
 		  
 						  	if reason == nil then
-								ESX.ShowNotification("You need to put something here!")
+							    ESX.ShowNotification(_U('put_something'))
 						  	else
 								menu3.close()
 		  
 								local closestPlayer, closestDistance = ESX.Game.GetClosestPlayer()
 		  
 								if closestPlayer == -1 or closestDistance > 3.0 then
-								  	ESX.ShowNotification("No players nearby!")
+								    ESX.ShowNotification(_U('players_nearby'))
 								else
 								  	TriggerServerEvent("esx-qalle-jail:jailPlayer", GetPlayerServerId(closestPlayer), jailTime, reason)
 								end
@@ -375,7 +345,7 @@ function OpenJailMenu()
 			ESX.TriggerServerCallback("esx-qalle-jail:retrieveJailedPlayers", function(playerArray)
 
 				if #playerArray == 0 then
-					ESX.ShowNotification("Your jail is empty!")
+				    ESX.ShowNotification(_U('jail_empty'))
 					return
 				end
 
@@ -409,4 +379,3 @@ function OpenJailMenu()
 		menu.close()
 	end)	
 end
-
